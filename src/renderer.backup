@@ -1,0 +1,103 @@
+/**
+ * This file will automatically be loaded by webpack and run in the "renderer" context.
+ * To learn more about the differences between the "main" and the "renderer" context in
+ * Electron, visit:
+ *
+ * https://electronjs.org/docs/tutorial/process-model
+ *
+ * By default, Node.js integration in this file is disabled. When enabling Node.js integration
+ * in a renderer process, please be aware of potential security implications. You can read
+ * more about security risks here:
+ *
+ * https://electronjs.org/docs/tutorial/security
+ *
+ * To enable Node.js integration in this file, open up `main.js` and enable the `nodeIntegration`
+ * flag:
+ *
+ * ```
+ *  // Create the browser window.
+ *  mainWindow = new BrowserWindow({
+ *    width: 800,
+ *    height: 600,
+ *    webPreferences: {
+ *      nodeIntegration: true
+ *    }
+ *  });
+ * ```
+ */
+
+import "./index.css";
+import { marked } from "marked";
+
+// Get DOM elements
+const search = document.getElementById("search");
+const noContent = document.getElementById("nocontent");
+const content = document.getElementById("content");
+
+// Parse markdown document and display in DOM
+const text = await window.api.getMarkdown();
+const md = marked.parse(text);
+
+if (!md) {
+  console.error("Non content!");
+}
+
+content.innerHTML = md;
+
+// Hide no content msg
+noContent.style.display = "none";
+
+search.addEventListener("input", () => {
+  filterResults();
+});
+
+function filterResults() {
+  // Hide no content msg
+  noContent.style.display = "none";
+  // Reset content
+  content.innerHTML = md;
+
+  // Get user input
+  const filter = search.value.toLowerCase();
+
+  if (!filter || filter.length === 0) {
+    return;
+  }
+
+  // Split content into an iterable array of lines
+  const html = md.split("\n");
+  const result = [];
+  let h1 = null;
+  let h2 = null;
+
+  for (const line of html) {
+    const lower = String(line).toLowerCase();
+
+    if (lower.startsWith("<h1")) {
+      h1 = line;
+      h2 = null;
+    } else if (lower.startsWith("<h2")) {
+      h2 = line;
+    }
+
+    const match = lower.includes(filter);
+
+    if (match) {
+      if (h1) {
+        result.push(h1);
+        h1 = null;
+      } else if (h2) {
+        result.push(h2);
+        h2 = null;
+      } else {
+        result.push(line);
+      }
+    }
+  }
+
+  if (result.length === 0) {
+    noContent.style.display = "";
+  }
+
+  content.innerHTML = result.join("\n");
+}

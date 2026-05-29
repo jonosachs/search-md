@@ -1,0 +1,903 @@
+<p>updated: 2026-05-21T11:50:37+10:00</p>
+<h1 id="data-types">Data Types</h1>
+<h2 id="primitives">Primitives</h2>
+<ul>
+<li><code>string</code> — immutable text; <code>"hello"</code>,
+<code>'hello'</code>, <code>`template ${literal}`</code></li>
+<li><code>number</code> — IEEE 754 double-precision float; covers
+integers and decimals; <code>NaN</code> and <code>Infinity</code> are
+numbers; no separate int type</li>
+<li><code>bigint</code> — arbitrary-precision integer; suffix
+<code>n</code> (e.g. <code>42n</code>); can’t mix with
+<code>number</code> in arithmetic</li>
+<li><code>boolean</code> — <code>true</code> or <code>false</code></li>
+<li><code>undefined</code> — variable declared but not assigned a
+value</li>
+<li><code>null</code> — intentional absence of value;
+<code>typeof null === "object"</code> is a historical quirk</li>
+<li><code>symbol</code> — unique, immutable identifier;
+<code>Symbol("desc")</code>; mainly used as object keys to avoid name
+collisions</li>
+</ul>
+<h2 id="collections-objects">Collections &amp; Objects</h2>
+<ul>
+<li><code>Object</code> — unordered key-value pairs; keys are strings or
+symbols; <code>let obj = { name: "Alice" }</code> (avoid
+<code>new Object()</code>)</li>
+<li><code>Array</code> — ordered, zero-indexed list;
+<code>let arr = [1, 2, 3]</code> (avoid <code>new Array()</code> —
+<code>new Array(3)</code> makes 3 empty slots, not
+<code>[3]</code>)</li>
+<li><code>Map</code> — key-value pairs where keys can be any type;
+<code>let m = new Map()</code> or
+<code>let m = new Map([[k, v], ...])</code> to pre-populate</li>
+<li><code>Set</code> — collection of unique values;
+<code>let s = new Set()</code> or
+<code>let s = new Set([1, 2, 2])</code> → <code>{1, 2, 3}</code></li>
+<li><code>WeakMap</code> / <code>WeakSet</code> — like
+<code>Map</code>/<code>Set</code> but keys must be objects and are
+weakly held (eligible for GC when no other references exist);
+<code>let wm = new WeakMap()</code> /
+<code>let ws = new WeakSet()</code></li>
+</ul>
+<h2 id="type-checking">Type checking</h2>
+<ul>
+<li><code>typeof x</code> — returns type as string:
+<code>"string"</code>, <code>"number"</code>, <code>"boolean"</code>,
+<code>"undefined"</code>, <code>"object"</code>,
+<code>"function"</code>, <code>"symbol"</code>, <code>"bigint"</code>;
+note <code>typeof null === "object"</code> (quirk)</li>
+<li><code>Array.isArray(x)</code> — reliable array check;
+<code>typeof []</code> returns <code>"object"</code> so
+<code>typeof</code> alone is insufficient</li>
+<li><code>x instanceof Foo</code> — returns <code>true</code> if
+<code>x</code> was created by <code>Foo</code> (checks the prototype
+chain); <code>[] instanceof Array</code> → <code>true</code></li>
+</ul>
+<h2 id="type-conversion">Type conversion</h2>
+<ul>
+<li><code>String(n)</code> — converts any value to a string; prefer over
+<code>.toString()</code> as it safely handles
+<code>null</code>/<code>undefined</code> without throwing;
+<code>String(42)</code> → <code>"42"</code>, <code>String(null)</code> →
+<code>"null"</code></li>
+<li><code>Number(s)</code> — converts a string (or other value) to a
+number; <code>Number("42")</code> → <code>42</code>,
+<code>Number("")</code> → <code>0</code>, <code>Number("abc")</code> →
+<code>NaN</code></li>
+<li><code>parseInt(s, radix)</code> — parses a string to an integer;
+always pass radix <code>10</code> to avoid octal surprises; stops at
+first non-numeric char; <code>parseInt("42px", 10)</code> →
+<code>42</code></li>
+<li><code>parseFloat(s)</code> — parses a string to a floating-point
+number; <code>parseFloat("3.14")</code> → <code>3.14</code></li>
+</ul>
+<h1 id="operators">Operators</h1>
+<ul>
+<li><code>===</code> / <code>!==</code> — strict equality / inequality;
+no type coercion; always prefer over <code>==</code> /
+<code>!=</code></li>
+<li><code>==</code> / <code>!=</code> — loose equality; coerces types
+before comparing; avoid</li>
+<li><code>&lt;</code> / <code>&gt;</code> / <code>&lt;=</code> /
+<code>&gt;=</code> — comparison operators</li>
+<li><code>&amp;&amp;</code> — logical AND; returns the first falsy
+value, or the last value if all truthy</li>
+<li><code>||</code> — logical OR; returns the first truthy value, or the
+last value if all falsy</li>
+<li><code>!</code> — logical NOT; flips truthiness</li>
+<li><code>??</code> — nullish coalescing; returns right side only if
+left is <code>null</code> or <code>undefined</code>; unlike
+<code>||</code>, does not trigger on <code>0</code>, <code>""</code>, or
+<code>false</code></li>
+<li><code>?.</code> — optional chaining; short-circuits to
+<code>undefined</code> if any part of the chain is
+<code>null</code>/<code>undefined</code>; <code>obj?.prop</code>,
+<code>arr?.[i]</code>, <code>fn?.()</code></li>
+<li><code>? :</code> — ternary;
+<code>condition ? valueIfTrue : valueIfFalse</code>; use for simple
+inline conditionals</li>
+<li><code>**</code> — exponentiation; <code>2 ** 3</code> →
+<code>8</code>; equivalent to <code>Math.pow(2, 3)</code></li>
+<li><code>+=</code> / <code>-=</code> / <code>*=</code> /
+<code>/=</code> / <code>%=</code> — compound assignment;
+<code>x += 1</code> is shorthand for <code>x = x + 1</code></li>
+<li><code>&amp;&amp;=</code> / <code>||=</code> / <code>??=</code> —
+logical assignment; only assigns if the condition is met;
+<code>x ??= 0</code> sets <code>x</code> to <code>0</code> only if
+<code>x</code> is <code>null</code>/<code>undefined</code></li>
+<li><code>i++</code> — post-increment; returns current value then
+increments; <code>++i</code> pre-increments first; in a <code>for</code>
+loop the distinction doesn’t matter — <code>i++</code> is
+conventional</li>
+<li><code>i--</code> / <code>--i</code> — post/pre-decrement; same
+pattern as increment</li>
+</ul>
+<h1 id="scope-closures">Scope &amp; Closures</h1>
+<ul>
+<li><code>var</code> — function-scoped; hoisted and initialised to
+<code>undefined</code>; avoid in modern code</li>
+<li><code>let</code> — block-scoped; hoisted but not initialised
+(temporal dead zone until the declaration line)</li>
+<li><code>const</code> — block-scoped; must be initialised at
+declaration; the binding is immutable but object/array contents can
+still mutate</li>
+<li><code>hoisting</code> — JS moves <code>var</code> declarations and
+<code>function</code> declarations to the top of their scope before
+execution; <code>let</code>/<code>const</code> are hoisted but not
+initialised</li>
+<li><code>closure</code> — a function that retains access to its outer
+scope’s variables after the outer function has returned; the inner
+function “closes over” those variables</li>
+</ul>
+<h1 id="the-this-keyword">The <code>this</code> Keyword</h1>
+<ul>
+<li><code>this</code> — refers to the object that is executing the
+current function; its value depends on <em>how</em> the function is
+called, not where it is defined</li>
+<li><code>this</code> in a method — refers to the object the method is
+called on; <code>obj.foo()</code> → <code>this</code> is
+<code>obj</code></li>
+<li><code>this</code> in a regular function — non-strict: the global
+object (<code>window</code> / <code>global</code>); strict mode:
+<code>undefined</code></li>
+<li><code>this</code> in an arrow function — inherited from the
+enclosing lexical scope; arrow functions have no own
+<code>this</code></li>
+<li><code>this</code> in a class — refers to the instance</li>
+<li><code>fn.call(obj, ...args)</code> — calls <code>fn</code> with
+<code>this</code> explicitly set to <code>obj</code></li>
+<li><code>fn.apply(obj, [args])</code> — like <code>.call()</code> but
+arguments passed as an array</li>
+<li><code>fn.bind(obj)</code> — returns a new function permanently bound
+to <code>obj</code> as <code>this</code>; does not call immediately</li>
+</ul>
+<h1 id="functions">Functions</h1>
+<ul>
+<li><code>function foo(x) {}</code> — function declaration; hoisted to
+the top of its scope</li>
+<li><code>const foo = function(x) {}</code> — function expression; not
+hoisted</li>
+<li><code>const foo = (x) =&gt; x * 2</code> — arrow function; concise
+syntax; no own <code>this</code> binding (inherits from enclosing
+scope)</li>
+<li><code>() =&gt; {}</code> — arrow function with no parameters and a
+block body; commonly used as a callback,
+e.g. <code>btn.addEventListener("click", () =&gt; {})</code></li>
+<li><code>const foo = (x = 0) =&gt; x</code> — default parameter; used
+when argument is <code>undefined</code></li>
+<li><code>function foo(...args) {}</code> — rest parameter; collects
+remaining arguments into an array; must be last</li>
+<li><code>foo?.()</code> — optional call; only invokes if
+<code>foo</code> is not <code>null</code>/<code>undefined</code></li>
+</ul>
+<h1 id="classes">Classes</h1>
+<ul>
+<li><code>class Foo {}</code> — class declaration; syntactic sugar over
+prototype-based inheritance</li>
+<li><code>constructor(args) {}</code> — called when
+<code>new Foo()</code> is invoked; initialises the instance</li>
+<li><code>new Foo()</code> — creates a new instance and calls the
+constructor</li>
+<li><code>this.prop = val</code> — set an instance property inside the
+constructor</li>
+<li><code>method() {}</code> — instance method; defined on the prototype
+and shared across all instances</li>
+<li><code>static method() {}</code> — class-level method; called on the
+class itself, not on instances; <code>Foo.method()</code></li>
+<li><code>get prop() {}</code> / <code>set prop(val) {}</code> —
+getter/setter; accessed like a property but backed by a function</li>
+<li><code>#field</code> — private field; only accessible within the
+class body; declared at the top of the class before the constructor</li>
+<li><code>class Bar extends Foo {}</code> — inherit from a parent class;
+<code>Bar</code> gets all of <code>Foo</code>’s methods</li>
+<li><code>super()</code> — call the parent constructor; must be called
+before accessing <code>this</code> in a subclass constructor</li>
+<li><code>super.method()</code> — call a parent class method from a
+subclass override</li>
+</ul>
+<h1 id="destructuring-spread">Destructuring &amp; Spread</h1>
+<ul>
+<li><code>const { a, b } = obj</code> — object destructuring; extracts
+named properties into variables</li>
+<li><code>const { a: renamed } = obj</code> — destructure and rename the
+local variable</li>
+<li><code>const { a = 0 } = obj</code> — destructure with a default
+value (used when the property is <code>undefined</code>)</li>
+<li><code>const [x, y] = arr</code> — array destructuring; assigns by
+position</li>
+<li><code>const [x, , z] = arr</code> — skip an element with an empty
+comma</li>
+<li><code>const { a, ...rest } = obj</code> — rest in destructuring;
+collects remaining properties into a new object</li>
+<li><code>const merged = { ...obj1, ...obj2 }</code> — spread to
+merge/clone objects; later keys overwrite earlier ones</li>
+<li><code>const copy = [...arr]</code> — spread to shallow-clone an
+array</li>
+</ul>
+<h1 id="iteration">Iteration</h1>
+<ul>
+<li><code>for (let i = 0; i &lt; n; i++)</code> — classic C-style loop;
+use when you need the index or non-standard step</li>
+<li><code>for (const val of iterable) {}</code> — iterates over the
+<em>values</em> of any iterable (arrays, strings, <code>Map</code>,
+<code>Set</code>, etc.); preferred for arrays</li>
+<li><code>for (const key in obj) {}</code> — iterates over the
+<em>enumerable property keys</em> of an object; avoid on arrays (can
+include inherited keys); use <code>Object.keys()</code> instead</li>
+<li><code>while (cond) {}</code> — loops while condition is truthy;
+condition checked before each iteration</li>
+<li><code>do {} while (cond)</code> — like <code>while</code> but body
+always runs at least once; condition checked after</li>
+<li><code>break</code> — exits the nearest enclosing loop or
+<code>switch</code> immediately</li>
+<li><code>continue</code> — skips the rest of the current iteration and
+moves to the next</li>
+<li><code>Array.from({ length: n }, (_, i) =&gt; i)</code> — create and
+populate an array of length <code>n</code>
+(e.g. <code>[0,1,2,…n-1]</code>)</li>
+<li><code>iterable</code> — any object with a
+<code>[Symbol.iterator]()</code> method; arrays, strings,
+<code>Map</code>, <code>Set</code>, generators are all iterables</li>
+<li><code>generator function</code> — returns a generator (an iterator);
+<code>yield</code> pauses execution and emits a value; body resumes on
+each <code>.next()</code> call;
+<code>function* gen() { yield 1 }</code></li>
+</ul>
+<h1 id="error-handling">Error Handling</h1>
+<ul>
+<li><code>try {} catch(e) {} finally {}</code> — <code>catch</code> runs
+on error; <code>finally</code> always runs (cleanup, closing
+resources)</li>
+<li><code>throw new Error("msg")</code> — throw an error;
+<code>Error</code> is the base type; can throw any value but
+<code>Error</code> instances carry a stack trace</li>
+<li><code>e.message</code> — the error message string</li>
+<li><code>e.stack</code> — the stack trace string (engine-specific
+format)</li>
+<li><code>TypeError</code> / <code>RangeError</code> /
+<code>SyntaxError</code> — built-in subtypes of <code>Error</code>;
+thrown by the runtime for type errors, out-of-range values, and parse
+errors respectively</li>
+</ul>
+<h1 id="promises-asyncawait">Promises &amp; Async/Await</h1>
+<ul>
+<li><code>Promise</code> — represents a value available now, later, or
+never; states: <code>pending</code>, <code>fulfilled</code>,
+<code>rejected</code></li>
+<li><code>new Promise((resolve, reject) =&gt; {})</code> — create a
+promise manually; call <code>resolve(val)</code> on success,
+<code>reject(err)</code> on failure</li>
+<li><code>promise.then(fn)</code> — runs <code>fn</code> with the
+resolved value; returns a new promise (chainable)</li>
+<li><code>promise.catch(fn)</code> — handles rejection; equivalent to
+<code>.then(null, fn)</code></li>
+<li><code>promise.finally(fn)</code> — runs <code>fn</code> regardless
+of outcome; good for cleanup; does not receive a value</li>
+<li><code>Promise.resolve(val)</code> — returns a promise resolved with
+<code>val</code>; useful for wrapping a sync value</li>
+<li><code>Promise.reject(err)</code> — returns a promise rejected with
+<code>err</code></li>
+<li><code>Promise.all([p1, p2])</code> — resolves when all promises
+resolve; rejects immediately if any reject</li>
+<li><code>Promise.allSettled([p1, p2])</code> — waits for all to settle;
+returns <code>[{status, value/reason}]</code>; never rejects</li>
+<li><code>Promise.race([p1, p2])</code> — resolves or rejects with
+whichever promise settles first</li>
+<li><code>Promise.any([p1, p2])</code> — resolves with the first
+fulfilled promise; rejects only if all reject (with
+<code>AggregateError</code>)</li>
+<li><code>async function foo() {}</code> — marks a function as async;
+always returns a promise</li>
+<li><code>await expr</code> — pauses the async function until
+<code>expr</code> resolves; only valid inside <code>async</code>
+functions</li>
+<li><code>try { await fn() } catch(e) {}</code> — standard pattern for
+error handling with async/await</li>
+</ul>
+<h1 id="event-loop">Event Loop</h1>
+<ul>
+<li><code>event loop</code> — JS is single-threaded; the event loop
+picks tasks from queues and pushes them onto the call stack when it is
+empty</li>
+<li><code>call stack</code> — LIFO stack of currently executing
+functions; synchronous code runs here</li>
+<li><code>microtask queue</code> — holds Promise callbacks
+(<code>.then</code>, <code>.catch</code>) and
+<code>queueMicrotask()</code>; drained completely after each task,
+before the next macrotask</li>
+<li><code>task queue (macrotask)</code> — holds callbacks from
+<code>setTimeout</code>, <code>setInterval</code>, and I/O events; one
+task processed per loop tick</li>
+<li><code>setTimeout(fn, ms)</code> — schedules <code>fn</code> as a
+macrotask after at least <code>ms</code> milliseconds; <code>ms=0</code>
+still defers until after current synchronous code and all
+microtasks</li>
+<li><code>setInterval(fn, ms)</code> — schedules <code>fn</code>
+repeatedly every <code>ms</code> milliseconds; returns an ID</li>
+<li><code>clearTimeout(id)</code> / <code>clearInterval(id)</code> —
+cancel a pending timeout or interval</li>
+<li><code>queueMicrotask(fn)</code> — schedules <code>fn</code> as a
+microtask; runs before the next macrotask</li>
+</ul>
+<h1 id="numbers">Numbers</h1>
+<ul>
+<li><code>n.toFixed(d)</code> — format with <code>d</code> decimal
+places; returns a string; <code>(3.14159).toFixed(2)</code> →
+<code>"3.14"</code></li>
+<li><code>n.toString(radix)</code> — convert to string in the given
+base; <code>(255).toString(16)</code> → <code>"ff"</code></li>
+<li><code>n.toPrecision(p)</code> — format with <code>p</code>
+significant digits; returns a string;
+<code>(123.456).toPrecision(4)</code> → <code>"123.5"</code></li>
+<li><code>Number.isInteger(n)</code> — <code>true</code> if
+<code>n</code> is a finite integer; <code>Number.isInteger(2)</code> →
+<code>true</code>, <code>Number.isInteger(2.5)</code> →
+<code>false</code></li>
+<li><code>Number.isFinite(n)</code> — <code>true</code> if
+<code>n</code> is a finite number (not <code>NaN</code> or
+<code>Infinity</code>); <code>Number.isFinite(Infinity)</code> →
+<code>false</code></li>
+<li><code>Number.isNaN(n)</code> — <code>true</code> if <code>n</code>
+is exactly <code>NaN</code>; safer than the global <code>isNaN()</code>
+which coerces; <code>Number.isNaN(NaN)</code> → <code>true</code></li>
+<li><code>Number.MAX_SAFE_INTEGER</code> — <code>2^53 - 1</code>;
+largest integer JS can represent exactly without precision loss</li>
+<li><code>Number.EPSILON</code> — smallest representable difference
+between floats; useful for float comparison</li>
+</ul>
+<h1 id="strings">Strings</h1>
+<ul>
+<li><code>str.length</code> — number of characters;
+<code>"hello".length</code> → <code>5</code></li>
+<li><code>str[i]</code> — access character by index; same rules as
+arrays; negative indices not supported; <code>"hello"[0]</code> →
+<code>"h"</code></li>
+<li><code>str.at(i)</code> — access character by index; supports
+negative indices; <code>"hello".at(-1)</code> → <code>"o"</code></li>
+<li><code>str.includes(substr)</code> — <code>true</code> if
+<code>substr</code> is found anywhere; case-sensitive;
+<code>"hello".includes("ell")</code> → <code>true</code></li>
+<li><code>str.slice(start, end)</code> — extracts a substring;
+<code>end</code> is exclusive; negative indices count from end;
+<code>"hello".slice(1, 3)</code> → <code>"el"</code>,
+<code>"hello".slice(-2)</code> → <code>"lo"</code></li>
+<li><code>str.split(sep)</code> — splits string into an array;
+<code>"a,b,c".split(",")</code> → <code>["a","b","c"]</code>;
+<code>"abc".split("")</code> → <code>["a","b","c"]</code></li>
+<li><code>str.trim()</code> — removes leading and trailing whitespace;
+<code>trimStart()</code> / <code>trimEnd()</code> for one side only;
+<code>"  hi  ".trim()</code> → <code>"hi"</code></li>
+<li><code>str.toUpperCase()</code> / <code>str.toLowerCase()</code> —
+change case; return a new string; <code>"Hi".toUpperCase()</code> →
+<code>"HI"</code></li>
+<li><code>str.replace(search, replacement)</code> — replaces first
+match; use a regex with <code>g</code> flag to replace all;
+<code>"foo bar foo".replace(/foo/g, "x")</code> →
+<code>"x bar x"</code></li>
+<li><code>str.replaceAll(search, replacement)</code> — replaces all
+matches; no regex needed;
+<code>"foo bar foo".replaceAll("foo", "x")</code> →
+<code>"x bar x"</code></li>
+<li><code>str.startsWith(prefix)</code> /
+<code>str.endsWith(suffix)</code> — <code>true</code> if string
+starts/ends with given value; <code>"hello".startsWith("he")</code> →
+<code>true</code></li>
+<li><code>str.indexOf(substr)</code> — returns index of first match;
+<code>-1</code> if not found; <code>"hello".indexOf("l")</code> →
+<code>2</code></li>
+<li><code>str.lastIndexOf(substr)</code> — returns index of last match;
+<code>-1</code> if not found; <code>"hello".lastIndexOf("l")</code> →
+<code>3</code></li>
+<li><code>str.padStart(n, char)</code> /
+<code>str.padEnd(n, char)</code> — pad to length <code>n</code>;
+<code>"5".padStart(3, "0")</code> → <code>"005"</code></li>
+<li><code>str.repeat(n)</code> — returns the string repeated
+<code>n</code> times; <code>"ab".repeat(3)</code> →
+<code>"ababab"</code></li>
+</ul>
+<h1 id="regular-expressions">Regular Expressions</h1>
+<ul>
+<li><code>/pattern/flags</code> — regex literal; common flags:
+<code>g</code> (find all matches), <code>i</code> (case-insensitive),
+<code>m</code> (multiline <code>^</code>/<code>$</code>)</li>
+<li><code>new RegExp(pattern, flags)</code> — dynamic regex; use when
+the pattern is stored in a variable</li>
+<li><code>regex.test(str)</code> — returns <code>true</code> if the
+pattern matches anywhere in <code>str</code></li>
+<li><code>str.match(regex)</code> — without <code>g</code>: returns
+first match with capture groups; with <code>g</code>: returns array of
+all matches</li>
+<li><code>str.matchAll(regex)</code> — returns iterator of all matches
+including capture groups; requires <code>g</code> flag</li>
+<li><code>str.replace(regex, replacement)</code> — replaces match(es);
+replacement can be a function
+<code>(match, ...groups) =&gt; newStr</code></li>
+<li><code>str.search(regex)</code> — returns index of first match;
+<code>-1</code> if not found</li>
+<li><code>str.split(regex)</code> — split on a regex pattern</li>
+<li><code>.</code> — any character except newline; <code>\d</code> digit
+<code>[0-9]</code>; <code>\w</code> word char <code>[a-zA-Z0-9_]</code>;
+<code>\s</code> whitespace; <code>\b</code> word boundary</li>
+<li><code>^</code> / <code>$</code> — start / end of string (or line
+with <code>m</code> flag)</li>
+<li><code>*</code> / <code>+</code> / <code>?</code> — zero or more /
+one or more / zero or one; append <code>?</code> to make lazy
+(e.g. <code>+?</code> matches as few as possible)</li>
+<li><code>{n}</code> / <code>{n,m}</code> — exactly <code>n</code> /
+between <code>n</code> and <code>m</code> repetitions</li>
+<li><code>[abc]</code> / <code>[^abc]</code> — character class / negated
+class; <code>[a-z]</code> range</li>
+<li><code>(group)</code> — capturing group; captured value available in
+match results</li>
+<li><code>(?:group)</code> — non-capturing group; groups without
+capturing the value</li>
+</ul>
+<h1 id="arrays">Arrays</h1>
+<ul>
+<li><code>arr.length</code> — number of elements;
+<code>[1,2,3].length</code> → <code>3</code></li>
+<li><code>arr[i]</code> — access element by index; zero-based; negative
+indices not supported (returns <code>undefined</code>);
+<code>[1,2,3][0]</code> → <code>1</code></li>
+<li><code>arr[i] = value</code> — assign element by index; mutates in
+place so works on <code>const</code> arrays; assigning past
+<code>length</code> creates a sparse array with holes;
+<code>const a = ["x"]; a[2] = "z"</code> →
+<code>["x", &lt;1 empty&gt;, "z"]</code>, <code>a.length</code> →
+<code>3</code></li>
+<li><code>arr.at(i)</code> — access element by index; supports negative
+indices; <code>[1,2,3].at(-1)</code> → <code>3</code></li>
+<li><code>arr.push(val)</code> — adds one or more elements to the end;
+returns new length; mutates; <code>arr.push(4)</code> appends
+<code>4</code></li>
+<li><code>arr.pop()</code> — removes and returns the last element;
+mutates; <code>[1,2,3].pop()</code> → <code>3</code></li>
+<li><code>arr.unshift(val)</code> — adds one or more elements to the
+start; returns new length; mutates; <code>arr.unshift(0)</code> prepends
+<code>0</code></li>
+<li><code>arr.shift()</code> — removes and returns the first element;
+mutates; <code>[1,2,3].shift()</code> → <code>1</code></li>
+<li><code>arr.map(fn)</code> — returns a new array with each element
+transformed; non-mutating; <code>[1,2,3].map(n =&gt; n * 2)</code> →
+<code>[2,4,6]</code></li>
+<li><code>arr.filter(fn)</code> — returns a new array of elements where
+<code>fn</code> returns truthy; non-mutating;
+<code>[1,2,3,4].filter(n =&gt; n &gt; 2)</code> →
+<code>[3,4]</code></li>
+<li><code>arr.reduce(fn, init)</code> — reduces array to a single value;
+<code>[1,2,3].reduce((a, b) =&gt; a + b, 0)</code> → <code>6</code></li>
+<li><code>arr.find(fn)</code> — returns the first element where
+<code>fn</code> is truthy; <code>[1,2,3].find(n =&gt; n &gt; 1)</code> →
+<code>2</code></li>
+<li><code>arr.findIndex(fn)</code> — returns the index of the first
+match; <code>-1</code> if none;
+<code>[1,2,3].findIndex(n =&gt; n &gt; 1)</code> → <code>1</code></li>
+<li><code>arr.some(fn)</code> — returns <code>true</code> if at least
+one element passes <code>fn</code>; short-circuits;
+<code>[1,2,3].some(n =&gt; n &gt; 2)</code> → <code>true</code></li>
+<li><code>arr.every(fn)</code> — returns <code>true</code> if all
+elements pass <code>fn</code>; short-circuits on the first
+<code>false</code>; <code>[1,2,3].every(n =&gt; n &gt; 0)</code> →
+<code>true</code>; for DOM collections, convert first:
+<code>Array.from(parent.children).every(child =&gt; child.style.display === "none")</code></li>
+<li><code>arr.forEach(fn)</code> — calls <code>fn</code> for each
+element; returns <code>undefined</code>; not chainable;
+<code>[1,2,3].forEach(n =&gt; console.log(n))</code></li>
+<li><code>arr.flat(depth)</code> — flattens nested arrays; default depth
+<code>1</code>; use <code>Infinity</code> for full flatten;
+<code>[1,[2,[3]]].flat(2)</code> → <code>[1,2,3]</code></li>
+<li><code>arr.flatMap(fn)</code> — maps then flattens one level;
+<code>[1,2,3].flatMap(n =&gt; [n, n*2])</code> →
+<code>[1,2,2,4,3,6]</code></li>
+<li><code>arr.includes(val)</code> — returns <code>true</code> if
+<code>val</code> is in the array (uses <code>===</code>);
+<code>[1,2,3].includes(2)</code> → <code>true</code></li>
+<li><code>arr.indexOf(val)</code> — returns index of first match (uses
+<code>===</code>); <code>-1</code> if not found;
+<code>[1,2,3,2].indexOf(2)</code> → <code>1</code></li>
+<li><code>arr.lastIndexOf(val)</code> — returns index of last match;
+<code>-1</code> if not found; <code>[1,2,3,2].lastIndexOf(2)</code> →
+<code>3</code></li>
+<li><code>arr.reverse()</code> — reverses in place; returns the reversed
+array; mutates; <code>[1,2,3].reverse()</code> →
+<code>[3,2,1]</code></li>
+<li><code>arr.concat(other)</code> — returns a new array with
+<code>other</code> appended; non-mutating;
+<code>[1,2].concat([3,4])</code> → <code>[1,2,3,4]</code>;
+<code>[...arr1, ...arr2]</code> is more idiomatic</li>
+<li><code>arr.slice(start, end)</code> — shallow copy of a portion;
+<code>end</code> is exclusive; negative indices count from end;
+non-mutating; <code>[1,2,3].slice(1, 3)</code> → <code>[2,3]</code>,
+<code>[1,2,3].slice(-2)</code> → <code>[2,3]</code>,
+<code>arr.slice()</code> clones</li>
+<li><code>arr.splice(start, n, ...items)</code> — removes <code>n</code>
+elements at <code>start</code>, optionally inserts <code>items</code>;
+mutates; <code>[1,2,3,4].splice(1, 2, "x")</code> mutates to
+<code>[1,"x",4]</code> and returns <code>[2,3]</code></li>
+<li><code>arr.sort(fn)</code> — sorts in place; always provide a
+comparator <code>(a, b) =&gt; a - b</code> for numbers (default sort is
+lexicographic); <code>[3,1,2].sort((a,b) =&gt; a-b)</code> →
+<code>[1,2,3]</code></li>
+<li><code>arr.join(sep)</code> — joins elements into a string with
+<code>sep</code> between them; <code>[1,2,3].join("-")</code> →
+<code>"1-2-3"</code></li>
+</ul>
+<h1 id="objects">Objects</h1>
+<ul>
+<li><code>obj.key</code> — dot notation; read a known property;
+<code>obj.name</code></li>
+<li><code>obj.key = val</code> — add or update a property; creates the
+key if it doesn’t exist</li>
+<li><code>obj[key]</code> — bracket notation; read or write using a
+dynamic or computed key; <code>obj[varName]</code></li>
+<li><code>delete obj.key</code> — remove a property; accessing it
+afterwards returns <code>undefined</code></li>
+<li><code>"key" in obj</code> — <code>true</code> if <code>key</code>
+exists on <code>obj</code> or its prototype chain; use
+<code>Object.hasOwn(obj, key)</code> to exclude inherited keys</li>
+<li><code>{ name }</code> — property shorthand; equivalent to
+<code>{ name: name }</code> when key matches the variable name</li>
+<li><code>{ [key]: val }</code> — computed property name; key is
+evaluated from an expression; <code>{ ["x" + i]: 1 }</code></li>
+<li><code>{ method() {} }</code> — method shorthand; equivalent to
+<code>{ method: function() {} }</code></li>
+<li><code>Object.keys(obj)</code> — array of own enumerable string keys;
+<code>Object.keys({a:1, b:2})</code> → <code>["a","b"]</code></li>
+<li><code>Object.values(obj)</code> — array of own enumerable values;
+<code>Object.values({a:1, b:2})</code> → <code>[1,2]</code></li>
+<li><code>Object.entries(obj)</code> — array of
+<code>[key, value]</code> pairs; <code>Object.entries({a:1, b:2})</code>
+→ <code>[["a",1],["b",2]]</code></li>
+<li><code>Object.fromEntries(entries)</code> — inverse of
+<code>Object.entries</code>; converts <code>[[k, v], ...]</code> or a
+<code>Map</code> to a plain object;
+<code>Object.fromEntries([["a",1]])</code> → <code>{a:1}</code></li>
+<li><code>Object.assign(target, ...sources)</code> — shallow merges
+sources into target; mutates target;
+<code>Object.assign({}, obj1, obj2)</code> clones and merges</li>
+<li><code>Object.freeze(obj)</code> — makes an object shallowly
+immutable; throws in strict mode on mutation; nested objects are not
+frozen; <code>Object.freeze({a:1})</code></li>
+<li><code>Object.create(proto)</code> — creates a new object with
+<code>proto</code> as its prototype; <code>Object.create(null)</code>
+gives a “pure” object with no inherited methods</li>
+<li><code>Object.hasOwn(obj, key)</code> — <code>true</code> if
+<code>key</code> is the object’s own (non-inherited) property; preferred
+over <code>obj.hasOwnProperty(key)</code>;
+<code>Object.hasOwn({a:1}, "a")</code> → <code>true</code></li>
+<li><code>Object.getPrototypeOf(obj)</code> — returns the prototype of
+<code>obj</code>;
+<code>Object.getPrototypeOf([]) === Array.prototype</code> →
+<code>true</code></li>
+<li><code>{ ...obj }</code> — spread; shallow clone or merge; later keys
+overwrite earlier ones (see Destructuring &amp; Spread)</li>
+</ul>
+<h1 id="maps">Maps</h1>
+<ul>
+<li><code>map.set(key, val)</code> — add or update an entry; returns the
+Map (chainable)</li>
+<li><code>map.get(key)</code> — retrieve value by key; returns
+<code>undefined</code> if not found; <code>m.get("a")</code></li>
+<li><code>map.has(key)</code> — returns <code>true</code> if the key
+exists; <code>m.has("a")</code> → <code>true</code></li>
+<li><code>map.delete(key)</code> — removes the entry; returns
+<code>true</code> if it existed; <code>m.delete("a")</code></li>
+<li><code>map.clear()</code> — removes all entries</li>
+<li><code>map.size</code> — number of entries (property, not a method);
+<code>m.size</code> → <code>3</code></li>
+<li><code>map.keys()</code> — iterator of keys in insertion order;
+<code>[...m.keys()]</code> → <code>["a","b"]</code></li>
+<li><code>map.values()</code> — iterator of values in insertion order;
+<code>[...m.values()]</code> → <code>[1,2]</code></li>
+<li><code>map.entries()</code> — iterator of <code>[key, value]</code>
+pairs; default iterator for <code>for...of</code>;
+<code>[...m.entries()]</code> → <code>[["a",1],["b",2]]</code></li>
+<li><code>map.forEach((val, key) =&gt; {})</code> — iterate entries;
+note argument order is <code>(value, key)</code>;
+<code>m.forEach((v, k) =&gt; console.log(k, v))</code></li>
+<li><code>for (const [k, v] of map) {}</code> — idiomatic iteration
+using destructuring</li>
+</ul>
+<h1 id="sets">Sets</h1>
+<ul>
+<li><code>set.add(val)</code> — adds a value; no-op if already present;
+returns the Set (chainable); <code>s.add(1).add(2)</code></li>
+<li><code>set.has(val)</code> — returns <code>true</code> if the value
+exists; O(1) lookup; <code>s.has(1)</code> → <code>true</code></li>
+<li><code>set.delete(val)</code> — removes a value; returns
+<code>true</code> if it existed; <code>s.delete(1)</code></li>
+<li><code>set.clear()</code> — removes all values</li>
+<li><code>set.size</code> — number of unique values (property, not a
+method); <code>s.size</code> → <code>3</code></li>
+<li><code>set.values()</code> — iterator of all values in insertion
+order; <code>[...s.values()]</code> → <code>[1,2,3]</code></li>
+<li><code>set.forEach(fn)</code> — iterates values;
+<code>s.forEach(v =&gt; console.log(v))</code></li>
+<li><code>for (const val of set) {}</code> — idiomatic iteration</li>
+<li><code>[...new Set(arr)]</code> — deduplicate an array;
+<code>[...new Set([1,1,2,3,3])]</code> → <code>[1,2,3]</code></li>
+</ul>
+<h1 id="json">JSON</h1>
+<ul>
+<li><code>JSON.stringify(val)</code> — serialises a JS value to a JSON
+string; <code>undefined</code>, functions, and symbols are omitted</li>
+<li><code>JSON.stringify(val, null, 2)</code> — pretty-print with
+2-space indentation</li>
+<li><code>JSON.parse(str)</code> — parses a JSON string into a JS value;
+throws <code>SyntaxError</code> if the string is invalid JSON</li>
+<li><code>structuredClone(obj)</code> — deep clones an object natively;
+handles more types than a JSON round-trip (e.g. <code>Date</code>,
+<code>Map</code>, <code>Set</code>); available Node 17+ and modern
+browsers</li>
+</ul>
+<h1 id="math">Math</h1>
+<ul>
+<li><code>Math.round(n)</code> — rounds to nearest integer;
+<code>.5</code> rounds up; <code>Math.round(2.5)</code> →
+<code>3</code></li>
+<li><code>Math.floor(n)</code> — rounds down (towards negative
+infinity); <code>Math.floor(2.9)</code> → <code>2</code></li>
+<li><code>Math.ceil(n)</code> — rounds up (towards positive infinity);
+<code>Math.ceil(2.1)</code> → <code>3</code></li>
+<li><code>Math.trunc(n)</code> — removes the decimal part (towards
+zero); differs from <code>floor</code> for negatives:
+<code>Math.trunc(-1.9)</code> → <code>-1</code></li>
+<li><code>Math.abs(n)</code> — absolute value; <code>Math.abs(-5)</code>
+→ <code>5</code></li>
+<li><code>Math.max(...nums)</code> — largest value; use spread for
+arrays: <code>Math.max(...[1,2,3])</code> → <code>3</code></li>
+<li><code>Math.min(...nums)</code> — smallest value;
+<code>Math.min(1,2,3)</code> → <code>1</code></li>
+<li><code>Math.sqrt(n)</code> — square root; <code>Math.sqrt(16)</code>
+→ <code>4</code></li>
+<li><code>Math.random()</code> — random float in <code>[0, 1)</code>;
+<code>Math.floor(Math.random() * n)</code> for a random integer in
+<code>[0, n)</code></li>
+<li><code>Math.PI</code> — π (3.14159…)</li>
+</ul>
+<h1 id="dom">DOM</h1>
+<ul>
+<li><code>element.innerHTML</code> — gets or replaces an element’s HTML
+contents as a string; parses tags and mutates child nodes, so prefer
+<code>textContent</code> for plain text and avoid assigning untrusted
+input because it can create XSS bugs</li>
+<li><code>element.textContent</code> — gets or replaces the plain text
+inside a node; does not parse HTML, so it is safer than
+<code>innerHTML</code> for user-provided text</li>
+<li><code>element.innerText</code> — gets or sets visible rendered text;
+affected by CSS/layout and usually slower than <code>textContent</code>;
+use mainly when you specifically need what the user would see</li>
+<li><code>element.value</code> — gets or sets the current value of form
+controls like <code>input</code>, <code>textarea</code>, and
+<code>select</code>; use after selecting the element,
+e.g. <code>document.querySelector("input").value</code></li>
+<li><code>element.style.display</code> — gets or sets the element’s
+inline CSS <code>display</code> value; common for show/hide toggles,
+e.g. <code>el.style.display = "none"</code> hides it and
+<code>el.style.display = "block"</code> shows it as a block</li>
+<li><code>element.outerHTML</code> — gets or replaces the element
+itself, including its opening/closing tag and children; assigning to it
+removes/replaces that node in the DOM</li>
+<li><code>element.children</code> — live HTMLCollection of an element’s
+child elements only, not an actual Array; convert before array methods
+with <code>Array.from(element.children)</code> or
+<code>[...element.children]</code>; excludes text/comment nodes, unlike
+<code>childNodes</code></li>
+<li><code>element.childNodes</code> — live NodeList of all direct child
+nodes, including element nodes, text nodes, comments, and whitespace
+text from formatted HTML</li>
+<li><code>element.insertAdjacentHTML(position, html)</code> — parses and
+inserts HTML without replacing existing children; positions include
+<code>"beforebegin"</code>, <code>"afterbegin"</code>,
+<code>"beforeend"</code>, <code>"afterend"</code>; still unsafe with
+untrusted input</li>
+<li><code>document.createElement(tag)</code> — creates an element node
+without inserting it into the DOM yet; commonly paired with
+<code>textContent</code> and <code>appendChild</code></li>
+<li><code>parent.append(...nodesOrStrings)</code> — appends one or more
+nodes/strings to the end of <code>parent</code>; strings become text
+nodes</li>
+<li><code>parent.appendChild(child)</code> — adds an existing or
+newly-created node as the last child of <code>parent</code>; mutates the
+DOM; <code>list.appendChild(item)</code> moves <code>item</code> into
+<code>list</code> if it already exists elsewhere</li>
+<li><code>parent.removeChild(child)</code> — removes a direct child node
+from <code>parent</code>; first get a reference to the child with
+something like <code>document.getElementById("item")</code> or
+<code>parent.querySelector(".item")</code>, then call
+<code>parent.removeChild(child)</code></li>
+<li><code>parent.replaceChildren(...nodesOrStrings)</code> — removes all
+existing children and inserts the supplied nodes/strings; useful for
+safely rebuilding a container</li>
+</ul>
+<h1 id="console">Console</h1>
+<ul>
+<li><code>console.log(...args)</code> — print to stdout; accepts
+multiple args and objects</li>
+<li><code>console.warn(...args)</code> — print to stderr with warning
+level</li>
+<li><code>console.error(...args)</code> — print to stderr with error
+level</li>
+<li><code>console.debug(...args)</code> — print debug info; filtered out
+in some environments</li>
+<li><code>console.table(arr)</code> — print an array of objects as a
+formatted table</li>
+<li><code>console.time(label)</code> /
+<code>console.timeEnd(label)</code> — measure elapsed time between two
+points</li>
+<li><code>console.group(label)</code> / <code>console.groupEnd()</code>
+— collapsible group of log messages</li>
+<li><code>console.dir(obj)</code> — print object with all properties;
+useful for inspecting deeply</li>
+</ul>
+<h1 id="modules">Modules</h1>
+<ul>
+<li><code>ESM (ECMAScript Modules)</code> — the modern standard JS
+module system; uses <code>import</code>/<code>export</code> syntax;
+statically analysable at build time (enables tree-shaking); native in
+browsers and Node 12+; activate in Node via <code>.mjs</code> extension
+or <code>"type": "module"</code> in <code>package.json</code></li>
+<li><code>import { foo } from './bar.js'</code> — named import; name
+must match an exported name in the source file</li>
+<li><code>import DefaultExport from './bar.js'</code> — default import;
+can be named anything locally</li>
+<li><code>import * as ns from './bar.js'</code> — namespace import; all
+named exports as properties of <code>ns</code></li>
+<li><code>export const foo = ...</code> /
+<code>export function foo() {}</code> — named export; a module can have
+many</li>
+<li><code>export default value</code> — default export; one per module;
+typically the module’s main thing</li>
+<li><code>import('./foo.js')</code> — dynamic import; returns a
+<code>Promise</code>; use <code>await import(...)</code> to load lazily
+at runtime (e.g. code-splitting, conditional loading)</li>
+<li><code>CommonJS (CJS)</code> — the older Node module system;
+<code>const x = require('./x')</code> /
+<code>module.exports = {...}</code>; synchronous; still widely used;
+cannot mix <code>require</code> and <code>import</code> in the same
+file</li>
+<li><code>"type": "module"</code> in <code>package.json</code> — treat
+all <code>.js</code> files in the project as ESM; use <code>.cjs</code>
+extension for any CommonJS files alongside them</li>
+<li><code>tree-shaking</code> — bundler optimisation that removes unused
+exports from the final bundle; only possible with ESM because
+<code>import</code>/<code>export</code> are static (analysable at build
+time without running the code); CJS <code>require()</code> is dynamic so
+bundlers can’t safely determine what’s unused</li>
+</ul>
+<h1 id="package-management">Package Management</h1>
+<ul>
+<li><code>npm</code> — Node Package Manager; the default package manager
+for Node.js; used to install, manage, and publish JavaScript packages;
+stores dependencies in <code>package.json</code> and locks versions in
+<code>package-lock.json</code></li>
+<li><code>npm init</code> — initialises a new Node.js project by
+interactively creating a <code>package.json</code> file in the current
+directory; use <code>npm init -y</code> to accept defaults and skip
+prompts</li>
+<li><code>npm install</code> — installs all dependencies listed in
+<code>package.json</code></li>
+<li><code>npm install &lt;pkg&gt;</code> — installs a package and adds
+it to <code>dependencies</code> in <code>package.json</code></li>
+<li><code>npm install &lt;pkg&gt; --save-dev</code> — installs a package
+and adds it to <code>devDependencies</code>; shorthand <code>-D</code>;
+use for tools only needed during development (test runners, linters,
+bundlers, type checkers); <code>npm install --omit=dev</code> (or
+<code>NODE_ENV=production</code>) skips them to keep production installs
+faster and deployed images smaller, since the built/running app doesn’t
+import them</li>
+<li><code>npm run &lt;script&gt;</code> — runs a script defined in the
+<code>scripts</code> section of <code>package.json</code></li>
+<li><code>npm uninstall &lt;pkg&gt;</code> — removes a package and
+updates <code>package.json</code></li>
+<li><code>npx &lt;cmd&gt;</code> — executes a CLI tool from
+<code>node_modules/.bin</code> if installed locally, otherwise downloads
+it temporarily, runs it, then discards; replaces the older
+<code>npm install -g</code> pattern for one-shot scaffolding tools;
+e.g. <code>npx create-react-app my-app</code> runs the scaffolder once
+without polluting global installs</li>
+<li><code>npx serve</code> — spins up a zero-config static file server
+in the current directory; defaults to
+<code>http://localhost:3000</code>; useful for previewing static
+HTML/JS/CSS without setting up a build tool;
+<code>npx serve ./dist</code> to serve a specific folder,
+<code>npx serve -p 8080</code> to set the port</li>
+<li><code>pnpm</code> — “performant npm”; drop-in alternative to
+<code>npm</code> that uses a global content-addressable store
+(<code>~/.pnpm-store/</code>) and symlinks each project’s
+<code>node_modules</code> into it, so packages aren’t duplicated across
+projects; faster installs, less disk usage, and a strict
+<code>node_modules</code> layout that blocks phantom dependencies
+(importing a transitive dep you didn’t declare); lockfile is
+<code>pnpm-lock.yaml</code>; install via <code>brew install pnpm</code>
+or <code>corepack enable</code></li>
+<li><code>pnpm install</code> / <code>pnpm add &lt;pkg&gt;</code> /
+<code>pnpm add -D &lt;pkg&gt;</code> /
+<code>pnpm run &lt;script&gt;</code> /
+<code>pnpm remove &lt;pkg&gt;</code> — same shape as the
+<code>npm</code> equivalents; <code>pnpm dlx &lt;cmd&gt;</code> is the
+<code>npx</code> equivalent (one-shot run without global install);
+e.g. <code>pnpm add react</code>,
+<code>pnpm dlx create-vite my-app</code></li>
+<li>version range specifiers (<code>^</code>, <code>~</code>, exact) —
+see <code>version range specifier</code> in compsci.md</li>
+</ul>
+<h1 id="runtime">Runtime</h1>
+<ul>
+<li><code>node</code> — JavaScript runtime built on Chrome’s V8 engine;
+executes JS outside the browser; provides its own stdlib
+(<code>fs</code>, <code>http</code>, <code>path</code>, etc.) and module
+systems (CommonJS, ESM); JS has no standalone compiler — V8 JIT-compiles
+to native code at runtime</li>
+<li><code>node &lt;file.js&gt;</code> — runs a JavaScript file</li>
+<li><code>node</code> (no args) — opens an interactive REPL</li>
+<li><code>node -e "&lt;code&gt;"</code> — executes a one-liner,
+e.g. <code>node -e "console.log(process.version)"</code></li>
+<li><code>node --watch &lt;file.js&gt;</code> — re-runs on file changes
+(Node 18+)</li>
+<li><code>node --inspect &lt;file.js&gt;</code> — starts the V8
+debugger; attach via Chrome DevTools or VS Code</li>
+<li><code>V8</code> — Google’s open-source JavaScript engine; parses JS
+and JIT-compiles it to machine code; used by Node and Chrome</li>
+<li><code>process.argv</code> — array of CLI arguments:
+<code>[node_path, script_path, ...args]</code></li>
+<li><code>process.env</code> — object of environment variables</li>
+</ul>
+<h1 id="testing">Testing</h1>
+<ul>
+<li><code>assert</code> — Node.js built-in module for assertions; throws
+<code>AssertionError</code> if condition is false;
+<code>import assert from 'assert'</code></li>
+<li><code>assert(condition, msg)</code> — throws if condition is
+falsy</li>
+<li><code>assert.strictEqual(a, b)</code> — throws if
+<code>a !== b</code></li>
+<li><code>assert.deepStrictEqual(a, b)</code> — throws if objects/arrays
+are not deeply equal</li>
+<li><code>assert.throws(fn)</code> — throws if <code>fn</code> does not
+throw</li>
+<li><code>node --test</code> — built-in test runner (Node 18+);
+discovers and runs <code>*.test.js</code> files</li>
+<li><code>import { test } from 'node:test'</code> — built-in test
+framework; <code>test('name', () =&gt; {})</code> defines a test</li>
+<li><code>import { describe, it } from 'node:test'</code> — BDD-style
+grouping;
+<code>describe('group', () =&gt; { it('case', () =&gt; {}) })</code></li>
+</ul>
+<h1 id="date-time">Date &amp; Time</h1>
+<h2 id="native-date">Native Date</h2>
+<ul>
+<li><code>new Date()</code> — current date/time</li>
+<li><code>new Date('2024-01-15')</code> — parse an ISO string</li>
+<li><code>Date.now()</code> — current Unix timestamp in
+milliseconds</li>
+<li><code>date.toISOString()</code> — format as
+<code>"2024-01-15T00:00:00.000Z"</code></li>
+<li><code>date.getFullYear()</code> / <code>getMonth()</code> /
+<code>getDate()</code> — year / month (0-indexed, add 1) / day; the
+0-indexed month is a common gotcha</li>
+<li><code>date.getTime()</code> — Unix timestamp in ms for this date
+instance</li>
+</ul>
+<h2 id="day.js-recommended">Day.js (recommended)</h2>
+<ul>
+<li><code>npm install dayjs</code> — install; 2kb, immutable,
+Moment.js-compatible API</li>
+<li><code>dayjs()</code> — current date/time</li>
+<li><code>dayjs('2024-01-15')</code> — parse an ISO string</li>
+<li><code>dayjs().format('YYYY-MM-DD HH:mm')</code> — format using
+tokens</li>
+<li><code>dayjs().add(7, 'day')</code> — add time; units:
+<code>day</code>, <code>month</code>, <code>year</code>,
+<code>hour</code>, <code>minute</code>, <code>second</code></li>
+<li><code>dayjs().subtract(1, 'month')</code> — subtract time</li>
+<li><code>dayjs().diff(other, 'day')</code> — difference between two
+Day.js instances in the given unit</li>
+<li><code>dayjs().isValid()</code> — check if the date parsed
+successfully</li>
+<li><code>dayjs().isBefore(other)</code> / <code>isAfter(other)</code> —
+comparison</li>
+<li><code>dayjs().toDate()</code> — convert back to native
+<code>Date</code></li>
+</ul>
