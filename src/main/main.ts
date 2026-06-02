@@ -1,9 +1,10 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
-const path = require("node:path");
-const fs = require("node:fs");
+import { app, BrowserWindow, ipcMain } from "electron";
+import path from "node:path";
+import fs from "node:fs";
+import squirrelStartup from "electron-squirrel-startup";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require("electron-squirrel-startup")) {
+if (squirrelStartup) {
   app.quit();
 }
 
@@ -26,7 +27,7 @@ const createWindow = () => {
 
 // Register named request 'get-markdown'
 ipcMain.handle("get-markdown", () => {
-  p = path.join(app.getAppPath(), "content.md");
+  const p = path.join(app.getAppPath(), "assets/content.md");
   return fs.readFileSync(p, "utf-8");
 });
 

@@ -14,3 +14,7 @@ body {
   height: 20px;
   padding: 10px;
 }
+
+.hidden {
+  display: none;
+}
