@@ -1,116 +1,197 @@
 import "./styles.css";
-import { marked } from "marked";
+import { marked, type Token, type Tokens } from "marked";
+
+const { userInput, contentWindow } = getDomElements();
+
+run();
+
+async function run() {
+  const rawContent = await fetchContent();
+  const { html, lexed } = parseContent(rawContent);
+  const contentModel = buildContentModel(lexed);
+
+  refreshPage(html);
+
+  userInput.addEventListener("input", () => {
+    filterContentBasedOnUserInput(contentModel, html);
+  });
+}
+
+async function fetchContent() {
+  const content = await window.api.getMarkdown();
+  return content;
+}
+
+function parseContent(md: string): {
+  html: string;
+  lexed: Token[];
+} {
+  // The lexer takes a markdown string and calls the tokenizer functions.
+  // @see https://marked.js.org/using_pro#lexer
+  const lexed = marked.lexer(md);
+  // async: false narrows to string return value
+  const html = marked.parse(md, { async: false });
+
+  if (!lexed || !html) {
+    throw Error("⚠️ No content!");
+  }
+  return { html, lexed };
+}
+
+function filterContentBasedOnUserInput(contentModel: Section[], html: string) {
+  // toggleNoContentMsg(noContentMsg);
+  refreshPage(html);
+
+  const normalisedUserInput = userInput.value.trim().toLowerCase();
+  // Only start filtering from 2 chars of input (pseudo-debounce)
+  if (normalisedUserInput.length < 2) {
+    return null;
+  }
+
+  const filteredContent = filterContentModel(contentModel, normalisedUserInput);
+  if (filteredContent) {
+    const filteredContentAsHtml = renderContent(filteredContent);
+    contentWindow.replaceChildren(filteredContentAsHtml);
+  }
+}
 
 // Get DOM elements
-const search = document.querySelector<HTMLInputElement>("#search");
-const noContent = document.getElementById("nocontent");
-const content = document.getElementById("content");
-
-if (!search || !noContent || !content) {
-  throw new Error("⚠️ DOM elements missing");
-}
-
-// Parse markdown document
-const text = await window.api.getMarkdown();
-const md = await marked.parse(text);
-
-if (!md) {
-  console.error("Non content!");
-}
-
-// Create static view for redrawing
-const staticContent = document.createElement("div");
-staticContent.innerHTML = md;
-
-redraw(content);
-
-// Hide no content msg
-toggleNoContentMsg(noContent);
-
-search.addEventListener("input", () => {
-  filterResults();
-});
-
-function buildSection() {}
-
-const filterResults = () => {
-  toggleNoContentMsg(noContent);
-  redraw(content);
-  // Get user input
-  const query = search.value.trim().toLowerCase();
-
-  // Only start filtering from 2 chars of input (pseudo-debounce)
-  if (query.length < 2) {
-    return;
+function getDomElements() {
+  const userInput = document.querySelector<HTMLInputElement>("#search");
+  const contentWindow = document.getElementById("content");
+  if (!userInput || !contentWindow) {
+    throw new Error("⚠️ DOM elements missing");
   }
+  return { userInput, contentWindow };
+}
 
-  const output = document.createDocumentFragment();
-  const currentSection = document.createDocumentFragment();
-  let h1 = null;
-  let h2 = null;
+interface Section {
+  heading: string | null;
+  subsections: Subsection[] | null;
+}
 
-  const html = Array.from(content.children);
+interface Subsection {
+  subheading: string | null;
+  items: string[] | null;
+}
 
-  for (const line of html) {
-    if (line.matches("h1")) {
-      // h1 designates start of new block
-      // If the previous block has children, append it to result
-      // (appending should remove the elements from block, freeing it
-      // for the next new block)
-      if (currentSection.hasChildNodes()) {
-        output.append(currentSection);
+function buildContentModel(lexedContent: Token[]): Section[] {
+  const combinedSections: Section[] = [];
+  let currentSection: Section | null = null;
+
+  for (const token of lexedContent) {
+    // For marked token types:
+    // @see https://github.com/markedjs/marked/blob/master/src/Tokens.ts
+    if (token.type === "heading") {
+      // h1 heading signals new section
+      if (token.depth === 1) {
+        // push the current section onto the stack
+        if (currentSection) combinedSections.push(currentSection);
+        // create new section with current heading
+        currentSection = {
+          heading: token.raw,
+          subsections: [{ subheading: null, items: [] }],
+        };
+        // h2 subheading
+      } else if (token.depth === 2) {
+        if (currentSection?.subsections)
+          currentSection.subsections.push({ subheading: token.raw, items: [] });
+      }
+      // list of line items
+    } else if (token.type === "list") {
+      token.items.forEach((li: Tokens.ListItem) => {
+        if (currentSection?.subsections?.at(-1)?.items)
+          currentSection.subsections.at(-1).items.push(li.raw);
+      });
+    }
+  }
+  if (currentSection) combinedSections.push(currentSection);
+  return combinedSections;
+}
+
+function renderContent(filteredContent: Section[]) {
+  const fragment = document.createDocumentFragment();
+
+  for (const section of filteredContent) {
+    const h1 = document.createElement("h1");
+    h1.textContent = section.heading;
+    fragment.appendChild(h1);
+
+    for (const subsection of section.subsections) {
+      if (subsection.subheading) {
+        const h2 = document.createElement("h2");
+        h2.innerHTML = subsection.subheading;
+        fragment.appendChild(h2);
+      }
+      if (subsection.items) {
+        const ul = document.createElement("ul");
+        subsection.items.forEach((li) => {
+          const item = document.createElement("li");
+          item.innerHTML = li;
+          ul.appendChild(item);
+        });
+
+        fragment.appendChild(ul);
+      }
+    }
+  }
+  return fragment;
+}
+
+// Possible Section shape:
+// {
+//   heading: "Data Types",
+//   subsections: [
+//     {
+//       subheading: "Primitives",
+//       items: ["match", "match"],
+//     },
+//     {
+//       subheading: "Collections & Objects",
+//       items: ["match", "match"],
+//     },
+//   ],
+// };
+
+function filterContentModel(contentModel: Section[], query: string): Section[] {
+  const filteredResults: Section[] = [];
+
+  for (const section of contentModel) {
+    const heading = section.heading;
+
+    if (heading.toLowerCase().includes(query)) {
+      filteredResults.push(section);
+      continue;
+    }
+
+    const filteredSection: Section = { heading: heading, subsections: [] };
+
+    for (const subsection of section.subsections) {
+      const subheading = subsection.subheading;
+
+      if (subheading?.toLowerCase().includes(query)) {
+        filteredSection.subsections.push(subsection);
+        continue;
       }
 
-      h1 = line;
-      h2 = null;
-    }
-    if (line.matches("h2")) {
-      h2 = line;
-    }
-    if (line.matches("ul")) {
-      const lis = Array.from(line.querySelectorAll("li"));
-
-      const lisMatching = lis.filter((li) =>
-        (li.textContent ?? "").toLowerCase().includes(query),
+      const filteredItems = subsection.items.filter((li) =>
+        li.toLowerCase().includes(query),
       );
 
-      // If there are li's that include the query, append these
-      // and the trailing headers
-      if (lisMatching.length > 0) {
-        if (h1) {
-          currentSection.appendChild(h1);
-          h1 = null;
-        }
-        if (h2) {
-          currentSection.appendChild(h2);
-          h2 = null;
-        }
-        lisMatching.forEach((li) => currentSection.appendChild(li));
-      } else {
-        // Otherwise check if the headers include the query and append
-        // these if so
-        if (h1 && (h1.textContent ?? "").toLowerCase().includes(query)) {
-          currentSection.appendChild(h1);
-          h1 = null;
-        }
-        if (h2 && (h2.textContent ?? "").toLowerCase().includes(query)) {
-          currentSection.appendChild(h2);
-          h2 = null;
-        }
+      if (filteredItems.length > 0) {
+        const filteredSubsection: Subsection = {
+          subheading: subheading,
+          items: filteredItems,
+        };
+        filteredSection.subsections.push(filteredSubsection);
       }
     }
+    if (filteredSection.subsections.length > 0)
+      filteredResults.push(filteredSection);
   }
-
-  content.replaceChildren(output);
-  if (content.innerHTML.length === 0) {
-    toggleNoContentMsg(content);
-  }
-};
-
-function toggleNoContentMsg(noContent: HTMLElement) {
-  noContent.classList.toggle("hidden");
+  return filteredResults;
 }
 
-function redraw(content: HTMLElement) {
-  content.replaceChildren(staticContent);
+function refreshPage(html: string) {
+  contentWindow.innerHTML = html;
 }
