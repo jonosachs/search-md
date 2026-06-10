@@ -1,6 +1,6 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "node:path";
-import fs from "node:fs";
+import fs, { readdir } from "node:fs";
 import squirrelStartup from "electron-squirrel-startup";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -26,9 +26,32 @@ const createWindow = () => {
 };
 
 // Register named request 'get-markdown'
-ipcMain.handle("get-markdown", () => {
-  const p = path.join(app.getAppPath(), "assets/content.md");
-  return fs.readFileSync(p, "utf-8");
+ipcMain.handle("get-markdown", (_event, dir, filename) => {
+  const filePath = path.join(dir, filename);
+  return fs.readFileSync(filePath, "utf-8");
+});
+
+// Allow user to select directory of md files
+ipcMain.handle("get-directory", async () => {
+  const result = await dialog.showOpenDialog({
+    title: "Select directory",
+    properties: ["openDirectory"],
+  });
+
+  if (result.canceled) {
+    return null;
+  }
+
+  const dir = result.filePaths[0];
+  let files = await fs.promises.readdir(dir);
+
+  files = files.filter((filename) => filename.toLowerCase().endsWith(".md"));
+
+  if (!files) {
+    console.error("No files found");
+  }
+
+  return { dir, files };
 });
 
 // This method will be called when Electron has finished

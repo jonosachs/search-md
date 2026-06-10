@@ -1,12 +1,30 @@
 import "./styles.css";
 import { marked, type Token, type Tokens } from "marked";
 
-const { userInput, contentWindow } = getDomElements();
+const { userInput, contentWindow, getDirBtn, filesWindow } = getDomElements();
 
 run();
 
 async function run() {
-  const rawContent = await fetchContent();
+  getDirBtn.addEventListener("click", () => {
+    handleClick();
+  });
+}
+
+async function handleClick() {
+  const targetDirAndFiles = await getDirAndFiles();
+
+  if (!targetDirAndFiles) {
+    throw Error("⚠️ No files found!");
+  }
+
+  const { dir, files } = targetDirAndFiles;
+  const filesHtml = renderFiles(dir, files);
+  filesWindow.appendChild(filesHtml);
+}
+
+async function loadContent(dir: string, filename: string) {
+  const rawContent = await fetchMarkdownFile(dir, filename);
   const { html, lexed } = parseContent(rawContent);
   const contentModel = buildContentModel(lexed);
 
@@ -17,8 +35,34 @@ async function run() {
   });
 }
 
-async function fetchContent() {
-  const content = await window.api.getMarkdown();
+function renderFiles(dir: string, files: string[]) {
+  const fragment = document.createDocumentFragment();
+
+  for (const filename of files) {
+    const li = document.createElement("li");
+    li.textContent = filename;
+    li.addEventListener("click", async () => {
+      await loadContent(dir, filename);
+    });
+
+    fragment.appendChild(li);
+  }
+
+  return fragment;
+}
+
+async function getDirAndFiles() {
+  const result = await window.api.getDirectory();
+
+  if (result) {
+    return result;
+  }
+
+  return null;
+}
+
+async function fetchMarkdownFile(dir: string, filename: string) {
+  const content = await window.api.getMarkdown(dir, filename);
   return content;
 }
 
@@ -50,7 +94,7 @@ function filterContentBasedOnUserInput(contentModel: Section[], html: string) {
 
   const filteredContent = filterContentModel(contentModel, normalisedUserInput);
   if (filteredContent) {
-    const filteredContentAsHtml = renderContent(filteredContent);
+    const filteredContentAsHtml = renderFilteredContent(filteredContent);
     contentWindow.replaceChildren(filteredContentAsHtml);
   }
 }
@@ -59,10 +103,13 @@ function filterContentBasedOnUserInput(contentModel: Section[], html: string) {
 function getDomElements() {
   const userInput = document.querySelector<HTMLInputElement>("#search");
   const contentWindow = document.getElementById("content");
-  if (!userInput || !contentWindow) {
+  const getDirBtn = document.getElementById("btn");
+  const filesWindow = document.getElementById("files");
+
+  if (!userInput || !contentWindow || !getDirBtn || !filesWindow) {
     throw new Error("⚠️ DOM elements missing");
   }
-  return { userInput, contentWindow };
+  return { userInput, contentWindow, getDirBtn, filesWindow };
 }
 
 interface Section {
@@ -109,7 +156,7 @@ function buildContentModel(lexedContent: Token[]): Section[] {
   return combinedSections;
 }
 
-function renderContent(filteredContent: Section[]) {
+function renderFilteredContent(filteredContent: Section[]) {
   const fragment = document.createDocumentFragment();
 
   for (const section of filteredContent) {
