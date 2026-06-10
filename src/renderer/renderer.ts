@@ -7,23 +7,50 @@ run();
 
 async function run() {
   getDirBtn.addEventListener("click", () => {
-    handleClick();
+    loadFilesFromDir();
   });
 }
 
-async function handleClick() {
-  const targetDirAndFiles = await getDirAndFiles();
+async function loadFilesFromDir() {
+  const targetDirPayload = await getTargetDirPayload();
 
-  if (!targetDirAndFiles) {
-    throw Error("⚠️ No files found!");
+  if (!targetDirPayload) {
+    console.error("⚠️ No files found!");
+    return;
   }
 
-  const { dir, files } = targetDirAndFiles;
-  const filesHtml = renderFiles(dir, files);
-  filesWindow.appendChild(filesHtml);
+  const { dir, files } = targetDirPayload;
+  const filenamesHtml = renderFileNames(dir, files);
+  filesWindow.appendChild(filenamesHtml);
 }
 
-async function loadContent(dir: string, filename: string) {
+async function getTargetDirPayload() {
+  const result = await window.api.getDirectory();
+
+  if (result) {
+    return result;
+  }
+
+  return null;
+}
+
+function renderFileNames(dir: string, files: string[]) {
+  const fragment = document.createDocumentFragment();
+
+  for (const filename of files) {
+    const li = document.createElement("li");
+    li.textContent = filename;
+    li.addEventListener("click", async () => {
+      await loadFileContent(dir, filename);
+    });
+
+    fragment.appendChild(li);
+  }
+
+  return fragment;
+}
+
+async function loadFileContent(dir: string, filename: string) {
   const rawContent = await fetchMarkdownFile(dir, filename);
   const { html, lexed } = parseContent(rawContent);
   const contentModel = buildContentModel(lexed);
@@ -33,32 +60,6 @@ async function loadContent(dir: string, filename: string) {
   userInput.addEventListener("input", () => {
     filterContentBasedOnUserInput(contentModel, html);
   });
-}
-
-function renderFiles(dir: string, files: string[]) {
-  const fragment = document.createDocumentFragment();
-
-  for (const filename of files) {
-    const li = document.createElement("li");
-    li.textContent = filename;
-    li.addEventListener("click", async () => {
-      await loadContent(dir, filename);
-    });
-
-    fragment.appendChild(li);
-  }
-
-  return fragment;
-}
-
-async function getDirAndFiles() {
-  const result = await window.api.getDirectory();
-
-  if (result) {
-    return result;
-  }
-
-  return null;
 }
 
 async function fetchMarkdownFile(dir: string, filename: string) {
