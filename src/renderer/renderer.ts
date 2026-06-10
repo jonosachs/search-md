@@ -40,7 +40,14 @@ function renderFileNames(dir: string, files: string[]) {
   for (const filename of files) {
     const li = document.createElement("li");
     li.textContent = filename;
+
+    // Make each filename load content when clicked by user
     li.addEventListener("click", async () => {
+      // Clear highlight from previous selection
+      filesWindow.querySelector(".selected")?.classList.remove("selected");
+      // Add highlight to new selection
+      li.classList.add("selected");
+      // Load selected file content into window
       await loadFileContent(dir, filename);
     });
 

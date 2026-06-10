@@ -18,6 +18,11 @@ body {
   display: none;
 }
 
+.selected {
+  font-weight: bold;
+  color: red;
+}
+
 button {
   border-radius: 5px;
   padding: 5px;
