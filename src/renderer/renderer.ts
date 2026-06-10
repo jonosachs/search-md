@@ -149,7 +149,7 @@ function buildContentModel(lexedContent: Token[]): Section[] {
         if (currentSection) combinedSections.push(currentSection);
         // create new section with current heading
         currentSection = {
-          heading: token.raw,
+          heading: token.text,
           subsections: [{ subheading: null, items: [] }],
         };
         // h2 subheading
