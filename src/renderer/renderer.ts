@@ -12,6 +12,7 @@ async function run() {
 }
 
 async function loadFilesFromDir() {
+  filesWindow.replaceChildren("");
   const targetDirPayload = await getTargetDirPayload();
 
   if (!targetDirPayload) {
