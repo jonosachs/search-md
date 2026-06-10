@@ -38,6 +38,7 @@ button {
   flex-shrink: 0;
   min-width: 100px;
   padding: 1rem;
+  overflow-wrap: break-word;
 }
 
 main {

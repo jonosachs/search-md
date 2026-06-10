@@ -36,6 +36,10 @@ async function getTargetDirPayload() {
 
 function renderFileNames(dir: string, files: string[]) {
   const fragment = document.createDocumentFragment();
+  const dirTag = document.createElement("p");
+  const dirText = `.../${dir.split("/").slice(-2).join("/")}`;
+  dirTag.innerText = dirText;
+  fragment.appendChild(dirTag);
 
   for (const filename of files) {
     const li = document.createElement("li");
@@ -150,13 +154,16 @@ function buildContentModel(lexedContent: Token[]): Section[] {
         // h2 subheading
       } else if (token.depth === 2) {
         if (currentSection?.subsections)
-          currentSection.subsections.push({ subheading: token.raw, items: [] });
+          currentSection.subsections.push({
+            subheading: token.text,
+            items: [],
+          });
       }
       // list of line items
     } else if (token.type === "list") {
       token.items.forEach((li: Tokens.ListItem) => {
         if (currentSection?.subsections?.at(-1)?.items)
-          currentSection.subsections.at(-1).items.push(li.raw);
+          currentSection.subsections.at(-1).items.push(li.text);
       });
     }
   }
