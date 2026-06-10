@@ -32,7 +32,7 @@ ipcMain.handle("get-markdown", (_event, dir, filename) => {
 });
 
 // Allow user to select directory of md files
-ipcMain.handle("get-directory", async () => {
+ipcMain.handle("select-directory", async () => {
   const result = await dialog.showOpenDialog({
     title: "Select directory",
     properties: ["openDirectory"],
