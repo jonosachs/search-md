@@ -8,10 +8,12 @@ Desktop Electron app allowing users to load and search markdown files from a loc
 
 ## Instructions
 
-**Dev**
+**Dev** 
+
 - Run `npm start`
 
-**Build** 
-- Run `npm run package`. \
-- Drop searchMD.app into /Applications folder (mac)
+**Build**
+
+- Run `npm run package`.
+- Drop searchMD.app into /Applications folder (macOS)
 
