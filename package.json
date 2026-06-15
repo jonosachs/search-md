@@ -1,6 +1,6 @@
 {
-  "name": "search",
-  "productName": "search",
+  "name": "search-md",
+  "productName": "searchMD",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".webpack/main",

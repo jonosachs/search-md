@@ -1,4 +1,4 @@
-# Search 🔦
+# SearchMD 🔦
 
 Desktop Electron app allowing users to load and search markdown files from a local directory.
 
