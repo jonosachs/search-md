@@ -1,8 +1,8 @@
-export async function getUserDir(): Promise<{
+export async function getUserDir(default_dir?: string): Promise<{
   dir: string;
   files: string[];
 }> {
-  const result = await window.api.selectDirectory();
+  const result = await window.api.selectDirectory(default_dir);
   return result;
 }
 

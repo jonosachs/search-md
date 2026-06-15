@@ -5,8 +5,11 @@ import { buildContentModel, filterContentModel, Section } from "./model";
 
 const { contentWindow, filesWindow, getDirBtn, userInput } = getDomElements();
 
+const DEFAULT_DIR = "/Documents/Study/Tech_Projects/Notes";
+await selectDir(DEFAULT_DIR);
+
 getDirBtn.addEventListener("click", async () => {
-  await handleBtnClick();
+  await selectDir();
 });
 
 function getDomElements() {
@@ -22,9 +25,14 @@ function getDomElements() {
   return { contentWindow, filesWindow, getDirBtn, userInput };
 }
 
-async function handleBtnClick() {
-  const { dir, files } = await getUserDir();
+async function selectDir(default_dir?: string) {
+  const response = await getUserDir(default_dir);
+  if (!response) {
+    return;
+  }
+  const { dir, files } = response;
   const filenames = renderFileNamesWithListeners(dir, files);
+  refreshPage("");
   filesWindow.replaceChildren(filenames);
 }
 
@@ -47,6 +55,13 @@ function renderFileNamesWithListeners(dir: string, files: string[]) {
   const dirText = `.../${dir.split("/").slice(-2).join("/")}`;
   dirTag.innerText = dirText;
   fragment.appendChild(dirTag);
+
+  if (files.length === 0) {
+    const p = document.createElement("p");
+    p.textContent = "No md files found";
+    fragment.appendChild(p);
+    return fragment;
+  }
 
   for (const filename of files) {
     const li = document.createElement("li");

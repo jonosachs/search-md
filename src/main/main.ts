@@ -22,7 +22,7 @@ const createWindow = () => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 };
 
 // Register named request 'get-markdown'
@@ -32,23 +32,34 @@ ipcMain.handle("get-markdown", (_event, dir, filename) => {
 });
 
 // Allow user to select directory of md files
-ipcMain.handle("select-directory", async () => {
-  const result = await dialog.showOpenDialog({
-    title: "Select directory",
-    properties: ["openDirectory"],
-  });
-
-  if (result.canceled) {
-    return null;
+ipcMain.handle("select-directory", async (_event, default_dir?: string) => {
+  if (default_dir) {
+    const home = app.getPath("home");
+    default_dir = `${home}${default_dir}`;
   }
 
-  const dir = result.filePaths[0];
+  let dir = default_dir || undefined;
+
+  // If dir not provided in argument show selector dialog
+  if (!dir) {
+    const result = await dialog.showOpenDialog({
+      title: "Select directory",
+      properties: ["openDirectory"],
+    });
+
+    if (result.canceled) {
+      return null;
+    }
+
+    dir = result.filePaths[0];
+  }
+
   let files = await fs.promises.readdir(dir);
 
   files = files.filter((filename) => filename.toLowerCase().endsWith(".md"));
 
-  if (!files) {
-    console.error("No files found");
+  if (files.length === 0) {
+    console.info("No md files found");
   }
 
   return { dir, files };

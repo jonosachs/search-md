@@ -6,5 +6,6 @@ import { contextBridge, ipcRenderer } from "electron";
 contextBridge.exposeInMainWorld("api", {
   getMarkdown: (dir: string, filename: string) =>
     ipcRenderer.invoke("get-markdown", dir, filename),
-  selectDirectory: () => ipcRenderer.invoke("select-directory"),
+  selectDirectory: (default_dir?: string) =>
+    ipcRenderer.invoke("select-directory", default_dir),
 });
