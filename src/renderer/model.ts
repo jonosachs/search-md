@@ -63,14 +63,14 @@ export function buildContentModel(lexedContent: Token[]): Section[] {
 // };
 export function filterContentModel(
   contentModel: Section[],
-  query: string,
+  query: string[],
 ): Section[] {
   const filteredResults: Section[] = [];
 
   for (const section of contentModel) {
     const heading = section.heading;
 
-    if (heading.toLowerCase().includes(query)) {
+    if (matchFound(heading, query)) {
       filteredResults.push(section);
       continue;
     }
@@ -80,13 +80,13 @@ export function filterContentModel(
     for (const subsection of section.subsections) {
       const subheading = subsection.subheading;
 
-      if (subheading?.toLowerCase().includes(query)) {
+      if (matchFound(subheading, query)) {
         filteredSection.subsections.push(subsection);
         continue;
       }
 
       const filteredItems = subsection.items.filter((li) =>
-        li.toLowerCase().includes(query),
+        matchFound(li, query),
       );
 
       if (filteredItems.length > 0) {
@@ -101,4 +101,12 @@ export function filterContentModel(
       filteredResults.push(filteredSection);
   }
   return filteredResults;
+}
+
+function matchFound(element: string | null, query: string[]) {
+  if (!element) return false;
+
+  const matches = query.every((q) => element.toLowerCase().includes(q));
+
+  return matches;
 }

@@ -99,13 +99,12 @@ function parseContent(md: string): {
 
 function filterContentOnUserInput(contentModel: Section[], html: string) {
   // toggleNoContentMsg(noContentMsg);
-  refreshPage(html);
-
-  const normalisedUserInput = userInput.value.trim().toLowerCase();
-  // Only start filtering from 2 chars of input (pseudo-debounce)
-  if (normalisedUserInput.length < 2) {
+  if (userInput.value.length == 0) {
+    refreshPage(html);
     return null;
   }
+
+  const normalisedUserInput = userInput.value.toLowerCase().trim().split(/\s+/);
 
   const filteredContent = filterContentModel(contentModel, normalisedUserInput);
   if (filteredContent) {
@@ -145,4 +144,5 @@ function renderFilteredContent(filteredContent: Section[]) {
 
 function refreshPage(html: string) {
   contentWindow.innerHTML = html;
+  userInput.value = "";
 }
