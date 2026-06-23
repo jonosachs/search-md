@@ -1,6 +1,6 @@
 # SearchMD 🔦
 
-Desktop Electron app allowing users to load and search markdown files from a local directory.
+Desktop Electron app to display and query markdown files from a local directory.
 
 ## Screenshot
 
@@ -8,12 +8,16 @@ Desktop Electron app allowing users to load and search markdown files from a loc
 
 ## Instructions
 
-**Dev** 
+Dev:
 
-- Run `npm start`
+```bash
+npm start
+```
 
-**Build**
+Build:
 
-- Run `npm run package`.
-- Drop searchMD.app into /Applications folder (macOS)
+```bash
+npm run package
+```
 
+Drop searchMD.app into /Applications folder (macOS)
