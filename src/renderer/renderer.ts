@@ -1,16 +1,45 @@
 import "./styles.css";
 import { marked, type Token } from "marked";
-import { getUserDir, fetchMarkdownFile } from "./io";
-import { buildContentModel, filterContentModel, Section } from "./model";
+import { getUserDir as getUserDirOrDefault, fetchMarkdownFile } from "./io";
+import {
+  buildContentModelFromTokens,
+  filterContentModel,
+  Section,
+} from "./model";
 
 const { contentWindow, filesWindow, getDirBtn, userInput } = getDomElements();
 
+let contentModel: Section[] | undefined = undefined;
+
+// Load the default dir on startup
 const DEFAULT_DIR = "/Documents/Study/Tech_Projects/Notes";
-await selectDir(DEFAULT_DIR);
+await selectDirOrLoadDefault(DEFAULT_DIR);
 
 getDirBtn.addEventListener("click", async () => {
-  await selectDir();
+  await selectDirOrLoadDefault();
 });
+
+userInput.addEventListener("input", () => {
+  handleUserInput(userInput.value);
+});
+
+async function handleFileClick(dir: string, filename: string) {
+  const markdown = await fetchMarkdownFile(dir, filename);
+  const { htmlText, tokens } = parseMdAsHtml(markdown);
+  refreshPage(htmlText);
+
+  contentModel = buildContentModelFromTokens(tokens);
+}
+
+function handleUserInput(input: string): void {
+  if (!contentModel) return;
+
+  const normalisedInput = input.toLowerCase().trim().split(/\s+/);
+  const filteredModel = filterContentModel(contentModel, normalisedInput);
+  const html = renderContentModelAsHtml(filteredModel);
+
+  refreshPage(html);
+}
 
 function getDomElements() {
   const contentWindow = document.getElementById("content");
@@ -25,37 +54,28 @@ function getDomElements() {
   return { contentWindow, filesWindow, getDirBtn, userInput };
 }
 
-async function selectDir(default_dir?: string) {
-  const response = await getUserDir(default_dir);
-  if (!response) {
+async function selectDirOrLoadDefault(default_dir?: string) {
+  const dirAndFiles = await getUserDirOrDefault(default_dir);
+  if (!dirAndFiles) {
     return;
   }
-  const { dir, files } = response;
+  const { dir, files } = dirAndFiles;
   const filenames = renderFileNamesWithListeners(dir, files);
   refreshPage("");
   filesWindow.replaceChildren(filenames);
 }
 
-async function handleFileClick(dir: string, filename: string) {
-  const fileContent = await fetchMarkdownFile(dir, filename);
-  const { html, lexed } = parseContent(fileContent);
-  const contentModel = buildContentModel(lexed);
-
-  refreshPage(html);
-
-  userInput?.addEventListener("input", () => {
-    filterContentOnUserInput(contentModel, html);
-  });
-}
-
 function renderFileNamesWithListeners(dir: string, files: string[]) {
+  // Build content in offscreen DOM fragment
   const fragment = document.createDocumentFragment();
+
+  // Render trimmed dir path text
   const dirTag = document.createElement("p");
-  // Shorten long filenames
   const dirText = `.../${dir.split("/").slice(-2).join("/")}`;
   dirTag.innerText = dirText;
   fragment.appendChild(dirTag);
 
+  // Handle case of no .md files in dir
   if (files.length === 0) {
     const p = document.createElement("p");
     p.textContent = "No md files found";
@@ -63,16 +83,18 @@ function renderFileNamesWithListeners(dir: string, files: string[]) {
     return fragment;
   }
 
+  // Render each file name with listener
   for (const filename of files) {
     const li = document.createElement("li");
     li.textContent = filename;
-    // Make each filename load content when clicked by user
+
     li.addEventListener("click", async () => {
       // Clear highlight from previous selection
       filesWindow.querySelector(".selected")?.classList.remove("selected");
       // Add highlight to new selection
       li.classList.add("selected");
-      await handleFileClick(dir, filename);
+
+      handleFileClick(dir, filename);
     });
 
     fragment.appendChild(li);
@@ -81,39 +103,23 @@ function renderFileNamesWithListeners(dir: string, files: string[]) {
   return fragment;
 }
 
-function parseContent(md: string): {
-  html: string;
-  lexed: Token[];
+function parseMdAsHtml(md: string): {
+  htmlText: string;
+  tokens: Token[];
 } {
   // The lexer takes a markdown string and calls the tokenizer functions.
   // @see https://marked.js.org/using_pro#lexer
-  const lexed = marked.lexer(md);
-  // async: false narrows to string return value
-  const html = marked.parse(md, { async: false });
+  const tokens = marked.lexer(md);
+  // 'async: false' narrows to string return value
+  const htmlText = marked.parse(md, { async: false });
 
-  if (!lexed || !html) {
+  if (!tokens || !htmlText) {
     throw Error("⚠️ No content!");
   }
-  return { html, lexed };
+  return { htmlText, tokens };
 }
 
-function filterContentOnUserInput(contentModel: Section[], html: string) {
-  // toggleNoContentMsg(noContentMsg);
-  if (userInput.value.length == 0) {
-    refreshPage(html);
-    return null;
-  }
-
-  const normalisedUserInput = userInput.value.toLowerCase().trim().split(/\s+/);
-
-  const filteredContent = filterContentModel(contentModel, normalisedUserInput);
-  if (filteredContent) {
-    const filteredContentAsHtml = renderFilteredContent(filteredContent);
-    contentWindow.replaceChildren(filteredContentAsHtml);
-  }
-}
-
-function renderFilteredContent(filteredContent: Section[]) {
+function renderContentModelAsHtml(filteredContent: Section[]) {
   const fragment = document.createDocumentFragment();
 
   for (const section of filteredContent) {
@@ -124,14 +130,20 @@ function renderFilteredContent(filteredContent: Section[]) {
     for (const subsection of section.subsections) {
       if (subsection.subheading) {
         const h2 = document.createElement("h2");
-        h2.innerHTML = subsection.subheading;
+        // Render raw markdown with inline formatting
+        // elements e.g. <code> to preserve style using marked
+        h2.innerHTML = marked.parseInline(subsection.subheading, {
+          async: false,
+        });
         fragment.appendChild(h2);
       }
       if (subsection.items) {
         const ul = document.createElement("ul");
         subsection.items.forEach((li) => {
           const item = document.createElement("li");
-          item.innerHTML = li;
+          // Parse the token with formatting using marked
+          // parser: Token[] → HTML string
+          item.innerHTML = marked.parser(li.tokens);
           ul.appendChild(item);
         });
 
@@ -142,7 +154,11 @@ function renderFilteredContent(filteredContent: Section[]) {
   return fragment;
 }
 
-function refreshPage(html: string) {
-  contentWindow.innerHTML = html;
-  userInput.value = "";
+function refreshPage(html: string | DocumentFragment) {
+  if (typeof html === "string") {
+    contentWindow.innerHTML = html;
+    userInput.value = "";
+  } else if (html instanceof DocumentFragment) {
+    contentWindow.replaceChildren(html);
+  } else throw new Error("Unexpected content type");
 }

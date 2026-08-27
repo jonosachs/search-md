@@ -7,14 +7,22 @@ export interface Section {
 
 export interface Subsection {
   subheading: string | null;
-  items: string[] | null;
+  items: Item[] | null;
 }
 
-export function buildContentModel(lexedContent: Token[]): Section[] {
+export interface Item {
+  // Raw markdown
+  text: string;
+  // Tokens with formatting preserved,
+  // required to rebuild after filtering
+  tokens: Token[];
+}
+
+export function buildContentModelFromTokens(tokens: Token[]): Section[] {
   const combinedSections: Section[] = [];
   let currentSection: Section | null = null;
 
-  for (const token of lexedContent) {
+  for (const token of tokens) {
     // For marked token types:
     // @see https://github.com/markedjs/marked/blob/master/src/Tokens.ts
     if (token.type === "heading") {
@@ -29,17 +37,19 @@ export function buildContentModel(lexedContent: Token[]): Section[] {
         };
         // h2 subheading
       } else if (token.depth >= 2) {
-        if (currentSection?.subsections)
-          currentSection.subsections.push({
-            subheading: token.text,
-            items: [],
-          });
+        currentSection?.subsections?.push({
+          subheading: token.text,
+          items: [],
+        });
       }
       // list of line items
+      // include the tokens so we can rebuild with formatting
     } else if (token.type === "list") {
       token.items.forEach((li: Tokens.ListItem) => {
-        if (currentSection?.subsections?.at(-1)?.items)
-          currentSection.subsections.at(-1).items.push(li.text);
+        currentSection?.subsections?.at(-1)?.items?.push({
+          text: li.text,
+          tokens: li.tokens,
+        });
       });
     }
   }
@@ -53,6 +63,7 @@ export function buildContentModel(lexedContent: Token[]): Section[] {
 //   subsections: [
 //     {
 //       subheading: "Primitives",
+//
 //       items: ["match", "match"],
 //     },
 //     {
@@ -86,7 +97,7 @@ export function filterContentModel(
       }
 
       const filteredItems = subsection.items.filter((li) =>
-        matchFound(li, query),
+        matchFound(li.text, query),
       );
 
       if (filteredItems.length > 0) {
@@ -103,10 +114,10 @@ export function filterContentModel(
   return filteredResults;
 }
 
-function matchFound(element: string | null, query: string[]) {
+function matchFound(element: string | null, query: string[]): boolean {
   if (!element) return false;
 
-  const matches = query.every((q) => element.toLowerCase().includes(q));
+  const hasMatch = query.every((q) => element.toLowerCase().includes(q));
 
-  return matches;
+  return hasMatch;
 }
