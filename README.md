@@ -65,7 +65,12 @@ Create a packaged app:
 npm run package
 ```
 
-On macOS, the packaged `.app` can be moved into `/Applications`.
+Above writes to `out/<productName>-<platform>-<arch>/`
+On macOS, the packaged `.app` can be moved into `/Applications`:
+
+```bash
+cp -R out/<productName>-<platform>-<arch>/searchMD.app /Applications/
+```
 
 ## Scripts
 
