@@ -65,38 +65,21 @@ Create a packaged app:
 npm run package
 ```
 
-Above writes to `out/<productName>-<platform>-<arch>/`
+Above writes to `out/`.
 On macOS, the packaged `.app` can be moved into `/Applications`:
 
 ```bash
-cp -R out/<productName>-<platform>-<arch>/searchMD.app /Applications/
+cp -R out/searchMD-darwin-arm64/searchMD.app/ /Applications/
 ```
 
 ## Scripts
 
-```bash
-npm start
-```
-
-Runs the Electron app in development mode.
-
-```bash
-npm run package
-```
-
-Packages the app with Electron Forge.
-
-```bash
-npm run make
-```
-
-Creates distributable installers/packages using the configured Forge makers.
-
-```bash
-npm run lint
-```
-
-Runs ESLint against the TypeScript source files.
+| Script | Description |
+| --- | --- |
+| `npm start` | Runs the Electron app in development mode. |
+| `npm run package` | Packages the app into `out/` (see [Build](#build)). |
+| `npm run make` | Creates distributable installers/packages using the configured Forge makers. |
+| `npm run lint` | Runs ESLint against the TypeScript source files. |
 
 ## Project Structure
 
